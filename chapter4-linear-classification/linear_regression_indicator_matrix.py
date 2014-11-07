@@ -1,7 +1,11 @@
-from statlearn import Point
 from sklearn import linear_model
 import numpy as np
 from matplotlib import pyplot
+class Point():
+    def __init__(self,x1,x2,color):
+        self.x1 = x1
+        self.x2 = x2
+        self.color = color
 
 def linear_regression_indicator_matrix(Xtrain, Ytrain):
     '''
@@ -51,7 +55,7 @@ def generate_points(N):
     for i in range(1, N):
         for mu, color in zip(means, colors):
             p = np.random.multivariate_normal(mu, cov, 1)[0]
-            points.append( Point(color, p[0], p[1]) )
+            points.append( Point(p[0], p[1], color) )
         
     return points
 

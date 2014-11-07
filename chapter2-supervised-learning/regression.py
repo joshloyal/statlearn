@@ -10,7 +10,7 @@ class Point():
         self.x1 = x1
         self.x2 = x2
 
-def generate_points():
+def generate_points(nsamp=100):
     '''
     Generate data from a combination of multivariate normal distributions.
     '''
@@ -23,32 +23,30 @@ def generate_points():
     means_orange = np.random.multivariate_normal([0,1], cov, n)
 
     # generate 100 observations
-    N = range(1,100)
+    N = range(1,nsamp)
     cov = cov / 5
-
+    
+    X, y = [], []
     for i in N:
         mu = means_blue[np.random.randint(n)]
         p  = np.random.multivariate_normal(mu, cov, 1)[0]
-        points.append( Point('blue', p[0], p[1]) )
+        X.append([p[0], p[1]])
+        y.append([0])
         
         mu = means_orange[np.random.randint(n)]
         p  = np.random.multivariate_normal(mu, cov, 1)[0]
-        points.append( Point('orange', p[0], p[1]) )
+        X.append([p[0], p[1]])
+        y.append([1])
 
-    return points
+    return np.array(X), np.array(y)
 
 def linear_regression():
-    points = generate_points() 
-
-    X = []
-    Y = []
-    for p in points:
-        X.append([1.0, p.x1, p.x2])
-        Y.append([1 if p.color == 'blue' else 0])
-
+    x, y = generate_points()
+    
+    X = np.c_[np.ones(x.shape[0]), x] # add column of 1's
     X = np.matrix(X)
-    Y = np.matrix(Y)
-
+    Y = np.matrix(y)
+    
     X_T = X.transpose()
     beta = np.linalg.inv(X_T * X) * X_T * Y
 
@@ -70,24 +68,21 @@ def linear_regression():
     pyplot.ylim(yy.min(), yy.max())
     
     # plot data points used to fit the regression
-    for p in points:
-        pyplot.plot(p.x1, p.x2, 'o', mfc = 'none',  mec = p.color)
+    y = np.array([l[0] for l in y])
+    x_blue, x_orange = x[y == 0], x[y == 1]
+    pyplot.plot(x_blue[:, 0], x_blue[:, 1], 'o', color='blue')
+    pyplot.plot(x_orange[:, 0], x_orange[:, 1], 'o', color='orange')
     
     # plot the regression line
     pyplot.plot(X1, X2, color = 'black')
     pyplot.show()
 
 def nearest_neighbors(k=15):
-    points = generate_points() 
+    x, y = generate_points() 
 
-    X = []
-    Y = []
-    for p in points:
-        X.append([p.x1, p.x2])
-        Y.append([1 if p.color == 'blue' else 0])
 
-    X = np.matrix(X)
-    Y = np.matrix(Y)
+    X = np.matrix(x)
+    Y = np.matrix(y)
 
     # Create color maps
     colors = ListedColormap(['#FFFAF5', '#F5F8FF'])
@@ -116,8 +111,10 @@ def nearest_neighbors(k=15):
     pyplot.xlim(xx.min(), xx.max())
     pyplot.ylim(yy.min(), yy.max())
 
-    for p in points:
-        pyplot.plot(p.x1, p.x2, 'o', mfc = 'none', mec = p.color)
+    y = np.array([l[0] for l in y])
+    x_blue, x_orange = x[y == 0], x[y == 1]
+    pyplot.plot(x_blue[:, 0], x_blue[:, 1], 'o', color='blue')
+    pyplot.plot(x_orange[:, 0], x_orange[:, 1], 'o', color='orange')
 
     pyplot.show()
 
