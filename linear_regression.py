@@ -5,12 +5,26 @@ from sklearn import neighbors
 from matplotlib.colors import ListedColormap
 
 class Point():
-    def __init__(self, color, x1, x2):
-        self.color = color
+    def __init__(self,x1,x2,color):
         self.x1 = x1
         self.x2 = x2
+        self.color = color
 
-def generate_points(nsamp=100):
+def generate_points(N):
+    points = []
+    
+    cov = np.eye(2) / 500
+    means  = [ [0.25, 0.25], [0.5, 0.5], [0.75, 0.75] ]
+    colors = [ 'orange', 'blue', 'green' ]
+
+    for i in range(1, N):
+        for mu, color in zip(means, colors):
+            p = np.random.multivariate_normal(mu, cov, 1)[0]
+            points.append( Point(p[0], p[1], color) )
+        
+    return points
+
+def generate_points_reg(nsamp=100):
     '''
     Generate data from a combination of multivariate normal distributions.
     '''
@@ -40,8 +54,73 @@ def generate_points(nsamp=100):
 
     return np.array(X), np.array(y)
 
+def linear_regression_indicator_matrix(Xtrain, Ytrain):
+    '''
+    Compute classification based on linear regression
+
+    Inputs:
+    Xtrain = training matrix (without column of ones needed to represent the offset
+    Ytrain  = training labels matrix of true classifications with indices 1 - K
+    (K is the number of classes)
+
+    '''
+    
+    K = max(Ytrain) + 1 # the number of classes
+    N = len(Ytrain)     # the number of samples
+
+    # form the indicator response matrix
+    Y = np.zeros([N, K])
+    for i, y in enumerate(Ytrain):
+        Y[i][y] = 1.
+    
+    # append a column of ones to the Xtrain matrix
+    X = np.matrix( Xtrain )
+    X = np.insert(X, 0, 1, axis=1)
+
+    # calculate the coefficients
+    X_T = X.transpose()
+    Bhat = np.linalg.inv(X_T * X) * X_T * Y
+    Yhat = X*Bhat          # discriminant predictions on the training data
+    gHat = Yhat.argmax(1)  # classify this data
+
+    # calculate the training error rate
+    err = 0.
+    for i, ghat in enumerate(gHat):
+        if ghat != Ytrain[i]:
+            err += 1.
+    err_frac = err / N
+
+    return np.array(Bhat), np.array(Yhat), np.array(gHat), err_frac
+    
+
+
+def linreg_indmat():
+    points = generate_points(50)
+
+    X = []
+    Y = []
+    color_dic = { 'blue' : 0, 'orange' : 1, 'green' : 2 }
+    for p in points:
+        X.append([p.x1, p.x2])
+        Y.append(color_dic[p.color])
+    Bhat, yHat, gHat, err_frac = linear_regression_indicator_matrix(X,Y)
+    print 'Training Error: %.2f' %(err_frac)
+
+
+    # plot the coeffiecients of the training data for each point 
+    X1 = [x[0] for x in X]
+    fig = pyplot.figure()
+    ax = fig.add_subplot(111) 
+    pyplot.ylim(-0.5,1.25)
+    ax.plot(X1, np.zeros(len(X1)) - 0.5, 'k+', ms=20)
+    ax.plot(X1, yHat[:,0], 'o', mfc = 'none', mec = 'blue')
+    ax.plot(X1, yHat[:,1], 'o', mfc = 'none', mec = 'orange')
+    ax.plot(X1, yHat[:,2], 'o', mfc = 'none', mec = 'green')
+    pyplot.show()
+
+
 def linear_regression():
-    x, y = generate_points()
+    x, y = generate_points_reg()
     
     X = np.c_[np.ones(x.shape[0]), x] # add column of 1's
     X = np.matrix(X)
@@ -78,7 +157,7 @@ def linear_regression():
     pyplot.show()
 
 def nearest_neighbors(k=15):
-    x, y = generate_points() 
+    x, y = generate_points_reg() 
 
 
     X = np.matrix(x)
@@ -113,12 +192,13 @@ def nearest_neighbors(k=15):
 
     y = np.array([l[0] for l in y])
     x_blue, x_orange = x[y == 0], x[y == 1]
-    pyplot.plot(x_blue[:, 0], x_blue[:, 1], 'o', color='blue')
-    pyplot.plot(x_orange[:, 0], x_orange[:, 1], 'o', color='orange')
+    pyplot.plot(x_blue[:, 0], x_blue[:, 1], 'o', color='orange')
+    pyplot.plot(x_orange[:, 0], x_orange[:, 1], 'o', color='blue')
 
     pyplot.show()
 
 if __name__ == '__main__':
-    #linear_regression()
-    nearest_neighbors(k=15)
+    linear_regression()
+    #nearest_neighbors(k=15)
+    #linreg_indmat()
 
