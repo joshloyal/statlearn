@@ -1,0 +1,10 @@
+ # Hyper Parameters for Neural Network
+n_epochs : 100
+pca : 100
+network :
+ shape : [100, 50, 20, 10]
+ activ : sigmoid
+ parameters : 
+  learning : 0.01
+  momentum : 0.5
+  regularizer : 0.0001
