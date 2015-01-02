@@ -10,4 +10,4 @@ Implemented Algorithms
 - Stochastic Gradient Descent with Momentum
 - Linear Discriminate Analysis
 - Gaussian Naive Bayes
-- Sigmoid/Rectifier neural network with L2 Regularization
+- Sigmoid/Rectifier Neural Network with L2 Regularization
